@@ -23,40 +23,54 @@ app.get('/__version', (_req, res) => {
   res.json({ ok: true, tag: 'server-version-A', time: Date.now() });
 });
 
+// CORS를 가장 먼저 설정 (다른 모든 미들웨어보다 먼저!)
+const allowedOrigins = [
+  'https://front-lyart-eta.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // 허용된 origin인 경우 헤더 설정
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie');
+    res.header('Access-Control-Expose-Headers', 'Content-Range, X-Content-Range');
+  } else {
+    console.warn('[CORS] Blocked origin:', origin);
+  }
+  
+  // Preflight OPTIONS 요청 즉시 응답
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
+  next();
+});
+
 // Security & common middlewares
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  contentSecurityPolicy: false // CORS와 충돌 방지
 }));
 app.use(express.json({ limit: '1mb' }));
-
-// CORS 설정 - 프론트엔드 요청 허용
-const corsOptions = {
-  origin: function (origin, callback) {
-    // 허용할 도메인 목록
-    const allowedOrigins = [
-      'https://front-lyart-eta.vercel.app',
-      'http://localhost:5173',
-      'http://localhost:3000'
-    ];
-    
-    // origin이 없는 경우(같은 도메인) 또는 허용 목록에 있는 경우 허용
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn('[CORS] Blocked origin:', origin);
-      callback(null, false);
-    }
-  },
-  credentials: true, // 쿠키 및 인증 정보 허용
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400 // Preflight 캐시 시간 (24시간)
-};
-
-app.use(cors(corsOptions));
+app.use(express.urlencoded({ extended: true })); // form data 지원
 app.use(morgan('dev'));
-app.use(session({ secret: 'simple_cookie_secret', resave: false, saveUninitialized: false }));
+app.use(session({ 
+  secret: 'simple_cookie_secret', 
+  resave: false, 
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // HTTPS에서만 쿠키 전송
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 크로스 사이트 허용
+    maxAge: 24 * 60 * 60 * 1000 // 24시간
+  }
+}));
 app.use(passport.initialize());
 app.use(passport.session());
 
