@@ -94,6 +94,45 @@ app.get('/__env', (_req, res) => {
   });
 });
 
+// 등록된 라우트 간단 목록
+app.get('/__routes-simple', (_req, res) => {
+  res.json({
+    health: ['GET /health'],
+    auth: [
+      'GET /auth/debug',
+      'GET /auth/google',
+      'GET /auth/google/callback',
+      'POST /auth/google/user'
+    ],
+    spotify: [
+      'GET /api/spotify/login',
+      'GET /api/spotify/callback',
+      'GET /api/spotify/token',
+      'POST /api/spotify/play'
+    ],
+    recommend: [
+      'GET /api/recommend/',
+      'POST /api/recommend/',
+      'POST /api/recommend/session',
+      'GET /api/recommend/user-id/:googleId',
+      'POST /api/recommend/save',
+      'GET /api/recommend/history/:googleId',
+      'GET /api/recommend/by-date/:googleId/:date'
+    ],
+    chat: [
+      'POST /api/chat/',
+      'POST /api/chat/reset',
+      'GET /api/chat/status'
+    ],
+    debug: [
+      'GET /__version',
+      'GET /__env',
+      'GET /__routes',
+      'GET /__routes-simple'
+    ]
+  });
+});
+
 // 라우팅 디버그용 핑 엔드포인트 (라우터 마운트 전역 확인)
 app.get('/auth/ping', (_req, res) => {
   res.json({ ok: true, message: 'index.js level /auth/ping' });
