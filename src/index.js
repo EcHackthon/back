@@ -128,26 +128,6 @@ router.get(
   }
 );
 
-// 구글 사용자 정보 조회 GET 엔드포인트 (세션 기반)
-router.get('/google/user', (req, res) => {
-  if (req.user) {
-    // Passport 세션에서 사용자 정보 반환
-    const userInfo = {
-      id: req.user.id,
-      name: req.user.displayName,
-      email: req.user.emails?.[0]?.value,
-      picture: req.user.photos?.[0]?.value
-    };
-    res.json({ success: true, user: userInfo });
-  } else {
-    res.status(401).json({ 
-      success: false, 
-      message: 'Not authenticated. Please login first.',
-      login_url: '/auth/google'
-    });
-  }
-});
-
 // 구글 로그인 사용자 정보를 받는 POST 엔드포인트
 router.post('/google/user', async (req, res) => {
   try {
