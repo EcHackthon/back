@@ -100,9 +100,11 @@ app.get('/__routes-simple', (_req, res) => {
     health: ['GET /health'],
     auth: [
       'GET /auth/debug',
+      'GET /auth/db-status (DB 연결 상태)',
       'GET /auth/google',
       'GET /auth/google/callback',
-      'POST /auth/google/user'
+      'GET /auth/google/user (세션 기반)',
+      'POST /auth/google/user (데이터 저장용)'
     ],
     spotify: [
       'GET /api/spotify/login',
